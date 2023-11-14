@@ -1,7 +1,6 @@
 from math import log10
 
 from numpy import argmin, random
-from scipy.stats import hypergeom
 
 
 class ContingencyTable:
@@ -28,21 +27,19 @@ class ContingencyTable:
             f3=int_to_str(self.frequencies[3]),
         )
 
-    def hypergeom_pmf(self) -> float:
-        # https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.hypergeom.html
-        # TODO: 本来は超幾何分布の確率を計算する必要はない
-        type1 = self.frequencies[0] + self.frequencies[1]
-        type2 = self.frequencies[2] + self.frequencies[3]
-        total = type1 + type2
-        drawn = self.frequencies[0] + self.frequencies[2]
-        return hypergeom.pmf(self.frequencies[0], total, type1, drawn)
-
     def _validate(self) -> bool:
         return min(self.frequencies) >= 0
 
     def _accept(self, candidate) -> bool:
         u = random.rand()
-        ratio = candidate.hypergeom_pmf() / self.hypergeom_pmf()
+        ratio = 1
+        for num, denom in zip(self.frequencies, candidate.frequencies):
+            if num == denom:
+                continue
+            elif num < denom:
+                ratio /= denom
+            elif num > denom:
+                ratio *= num
         return u <= ratio
 
     def _get_candidate(self):
