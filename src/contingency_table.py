@@ -1,23 +1,20 @@
 from math import log10
 
-from numpy import argmin, random
+from numpy import random
 
 
 class ContingencyTable:
     frequencies: list[int]
-    min_index: int
 
-    template = """
+    template = """\
 ┏━━━━━┳━━━━━┓
 ┃ {f0} ┃ {f1} ┃
 ┣━━━━━╋━━━━━┫
 ┃ {f2} ┃ {f3} ┃
-┗━━━━━┻━━━━━┛
-    """
+┗━━━━━┻━━━━━┛"""
 
     def __init__(self, frequencies: list[int]):
         self.frequencies = frequencies
-        self.min_index = argmin(self.frequencies)
 
     def __str__(self):
         return self.template.format(
@@ -25,6 +22,26 @@ class ContingencyTable:
             f1=int_to_str(self.frequencies[1]),
             f2=int_to_str(self.frequencies[2]),
             f3=int_to_str(self.frequencies[3]),
+        )
+
+    def next(self):
+        cand = self._get_candidate()
+        if not cand._validate():
+            return self
+        if self._accept(cand):
+            return cand
+        return self
+
+    def create_new(self, index, value):
+        diff = value - self.frequencies[index]
+        epsilon = 1 if index in [0, 3] else -1
+        return ContingencyTable(
+            [
+                self.frequencies[0] + epsilon * diff,
+                self.frequencies[1] - epsilon * diff,
+                self.frequencies[2] - epsilon * diff,
+                self.frequencies[3] + epsilon * diff,
+            ]
         )
 
     def _validate(self) -> bool:
@@ -56,14 +73,6 @@ class ContingencyTable:
                 self.frequencies[3] + epsilon,
             ]
         )
-
-    def next(self):
-        cand = self._get_candidate()
-        if not cand._validate():
-            return self
-        if self._accept(cand):
-            return cand
-        return self
 
 
 def int_to_str(i: int, length: int = 3):
